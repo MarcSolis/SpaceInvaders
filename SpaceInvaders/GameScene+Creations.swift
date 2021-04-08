@@ -95,7 +95,8 @@ extension GameScene {
         for n in 0...8 {
             addEnemy(3, at: CGPoint(x: startX + ( 1.5 * CGFloat(n) * enemySpacing ), y: startY))
         }
-
+        
+        self.activateEnemies(enemySpacing: enemySpacing)
     }
     
     private func addEnemy(_ number: Int, at position: CGPoint) {
@@ -117,12 +118,66 @@ extension GameScene {
         enemy.physicsBody?.contactTestBitMask = 0x00000000
         enemy.name = "Enemy_\(number)"
         enemy.physicsBody?.affectedByGravity = false
-        self.addChild(enemy)
+        self.enemiesContainer.addChild(enemy)
 
         enemy.run(SKAction.repeatForever(SKAction.animate(with: moveFrames,
                                                           timePerFrame: 1,
                                                           resize: false,
                                                           restore: true)))
+    }
+    
+    private func activateEnemies(enemySpacing: CGFloat){
+        let enemySpeed: TimeInterval = 2
+        let enemyMovementInterval: TimeInterval = 1
+        let moveAction = SKAction.moveBy(x: enemySpacing*self.enemiesDirection.dx, y: self.enemiesVerticaSpacing*self.enemiesDirection.dy, duration: (1/enemySpeed))
+        let waitAction = SKAction.wait(forDuration: enemyMovementInterval)
+        var checkBorder = SKAction.run {
+            self.checkBorderCollision()
+        }
+        let movementSequence = SKAction.sequence([moveAction, waitAction])
+        self.enemiesContainer.run(SKAction.repeat(movementSequence, count: 2))
+    }
+    
+    func checkBorderCollision(){
+        var borderPosition = CGVector(dx:0, dy:0)
+        self.enemiesDirection.dy = 0
+        if(self.enemiesDirection.dx > 0){
+            borderPosition = checkBiggestPosition()
+        }
+        else{
+            borderPosition = checkLowestPosition()
+        }
+        if(isOnLimit(pos: borderPosition)){
+            self.enemiesDirection.dx *= -1
+            self.enemiesDirection.dy = -1
+        }
+    }
+    
+    func checkBiggestPosition() -> CGVector{
+        var temp = CGVector(dx:Int.min, dy:0)
+        for i in 0 ... 8{
+            if(temp.dx < self.enemiesContainer.children[i].position.x){
+                temp.dx = self.enemiesContainer.children[i].position.x
+            }
+        }
+        return temp
+    }
+    
+    func checkLowestPosition() -> CGVector{
+        var temp = CGVector(dx:Int.max, dy:0)
+        for i in 0 ... 8{
+            if(temp.dx < self.enemiesContainer.children[i].position.x){
+                temp.dx = self.enemiesContainer.children[i].position.x
+            }
+        }
+        return temp
+    }
+    
+    func isOnLimit(pos : CGVector) -> Bool{
+        var onLimit = false
+        
+        onLimit = (pos.dx <= (-(self.size.width / 2) + 30) || (pos.dx >= (self.size.width / 2) - 30))
+        return onLimit
     }
     
     func createBomb(at position: CGPoint) {

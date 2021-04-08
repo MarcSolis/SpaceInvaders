@@ -11,6 +11,8 @@ import GameplayKit
 class GameScene: SKScene {
     
     var spaceShip: SKSpriteNode!
+    var enemiesContainer: SKSpriteNode!
+    var enemiesDirection = CGVector(dx:1, dy:0)
     private let laserShootSound = SKAction.playSoundFileNamed("lasershoot.wav", waitForCompletion: false)
     let bombSound = SKAction.playSoundFileNamed("bomb.wav", waitForCompletion: false)
     let boomSound = SKAction.playSoundFileNamed("boom.wav", waitForCompletion: false)
@@ -23,18 +25,25 @@ class GameScene: SKScene {
     var houseImpacts = [0, 0, 0, 0]
     
     override func didMove(to view: SKView) {
-        let spaceshipYPositon = -(self.size.height / 2) + 100
+        self.enemiesContainer = SKSpriteNode()
+        self.enemiesContainer.name = "enemies"
+        self.addChild(self.enemiesContainer)
         
+        let spaceshipYPositon = -(self.size.height / 2) + 100
         self.backgroundColor = .black
         self.spaceShip = SKSpriteNode(imageNamed: "SpaceShip")
         self.spaceShip.name = "spaceship"
         self.spaceShip.size = CGSize(width: 50, height: 25)
         self.spaceShip.position = CGPoint(x: 0, y: spaceshipYPositon)
+        self.spaceShip.physicsBody = SKPhysicsBody(texture: spaceShip.texture!, size: spaceShip.size)
+        self.spaceShip.physicsBody?.affectedByGravity = false
+
+        self.spaceShip.physicsBody?.categoryBitMask = 0x00000100
         self.addChild(self.spaceShip)
         
         self.addHouses(spaceshipYPositon)
         
-        self.addEnemies(at: 100)
+        self.addEnemies(at: 100)        
         
         self.physicsWorld.contactDelegate = self
         
